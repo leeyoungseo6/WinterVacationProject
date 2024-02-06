@@ -22,7 +22,7 @@ namespace YS
                 // ( _prevItem이 null인 경우도 해당 )
                 if (hit.transform.TryGetComponent(out ISelectable currentItem) && !Equals(currentItem, _prevItem))
                 {
-                    // 이전에 가리키던 아이템의 MouseExit 실행하고 currentItem의 MouseEnter 실행
+                    // _prevItem의 MouseExit 실행하고 currentItem의 MouseEnter 실행
                     _prevItem?.MouseExit();
                     currentItem.MouseEnter();
                     _prevItem = currentItem;
@@ -30,7 +30,7 @@ namespace YS
             }
             else // 아무것도 감지되지 않은 경우
             {
-                _prevItem?.MouseExit(); // 이전 _prevItem의 MouseExit을 실행시키고
+                _prevItem?.MouseExit(); // _prevItem의 MouseExit을 실행하고
                 _prevItem = null; // _prevItem은 비움
             }
         }
