@@ -5,14 +5,21 @@ namespace YS
 {
     public class PlayerInput : MonoBehaviour
     {
+        [Header("Movement")]
         public UnityEvent<Vector3> OnMoveInput;
         public UnityEvent<Vector3> OnRotateInput;
         public UnityEvent<bool> OnSprintInput;
+        public UnityEvent OnJumpInput;
+
+        [Header("Skill")]
+        public UnityEvent<bool> OnSkillInput1;
 
         private void Update()
         {
             GetRotateInput();
             GetSprintInput();
+            GetJumpInput();
+            GetSkillInput1();
         }
 
         private void FixedUpdate()
@@ -38,6 +45,17 @@ namespace YS
         {
             if (Input.GetKeyDown(KeyCode.LeftShift)) OnSprintInput?.Invoke(true);
             else if (Input.GetKeyUp(KeyCode.LeftShift)) OnSprintInput?.Invoke(false);
+        }
+
+        private void GetJumpInput()
+        {
+            if (Input.GetButtonDown("Jump")) OnJumpInput?.Invoke();
+        }
+
+        private void GetSkillInput1()
+        {
+            if (Input.GetKeyDown(KeyCode.LeftControl)) OnSkillInput1?.Invoke(true);
+            else if (Input.GetKeyUp(KeyCode.LeftControl)) OnSkillInput1?.Invoke(false);
         }
     }
 }

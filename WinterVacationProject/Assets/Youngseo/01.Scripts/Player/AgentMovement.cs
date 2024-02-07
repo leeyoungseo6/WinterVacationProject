@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace YS
@@ -18,6 +19,11 @@ namespace YS
         [SerializeField] private float _downRotateLimit = -70;
         private Transform _headTrm;
         private float _rotX;
+
+        [Header("Jump")]
+        [SerializeField] private float _jumpPower = 10;
+        [SerializeField] private LayerMask _groundLayer;
+        private bool _isJump;
         
         private Rigidbody _rigid;
 
@@ -32,6 +38,8 @@ namespace YS
 
         public void OnMove(Vector3 dir)
         {
+            if (_isJump) return;
+            
             dir = Quaternion.Euler(0, _headTrm.eulerAngles.y, 0) * dir;
             
             if (dir.sqrMagnitude > 0)
@@ -49,7 +57,14 @@ namespace YS
             
             _currentSpeed = CalculateSpeed(dir);
             if (_currentSpeed <= 0) return;
-            _rigid.AddForce(_moveDir * 30);
+            if (Physics.Raycast(transform.position, Vector3.down, out var hit, 1.1f, _groundLayer))
+            {
+                if (dir.sqrMagnitude > 0 && Vector3.Angle(Vector3.up, hit.normal) is > 20 or < 90)
+                {
+                    _moveDir = Vector3.ProjectOnPlane(_moveDir, hit.normal) * 2;
+                }
+            }
+            _rigid.AddForce(_moveDir * 30, ForceMode.Force);
             _rigid.velocity = Vector3.ClampMagnitude(_rigid.velocity, _currentSpeed);
         }
         
@@ -69,8 +84,7 @@ namespace YS
 
         public void OnSprint(bool value)
         {
-            if (value) _maxSpeed *= 2;
-            else _maxSpeed /= 2;
+            _maxSpeed = value ? 5 : 2.5f;
         }
 
         public void OnRotate(Vector3 rot)
@@ -79,6 +93,28 @@ namespace YS
             float rotY = _headTrm.eulerAngles.y + rot.y;
             _rotX = Mathf.Clamp(_rotX + rot.x, -_upRotateLimit, -_downRotateLimit);
             _headTrm.eulerAngles = new Vector3(_rotX, rotY);
+        }
+
+        public void OnJump()
+        {
+            if (_isJump == false && RaycastDown(0.15f, _groundLayer))
+            {
+                StartCoroutine(Jump());
+            }
+        }
+
+        private IEnumerator Jump()
+        {
+            _isJump = true;
+            _rigid.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
+            yield return new WaitForSeconds(0.1f);
+            yield return new WaitUntil(() => RaycastDown(0.15f, _groundLayer));
+            _isJump = false;
+        }
+
+        private bool RaycastDown(float maxDistance, int layer)
+        {
+            return Physics.Raycast(transform.position + new Vector3(0, 0.01f, 0), Vector3.down, maxDistance, layer);
         }
     }
 }
